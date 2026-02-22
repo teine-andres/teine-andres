@@ -1,6 +1,6 @@
 # Database Guide for the Agent
 
-This database stores the agent's core prompts, state, memories, tasks, credentials, and audit logs. Use only the tables listed here and follow the access rules per table.
+This database stores the agent's core prompts, state, memories, tasks, and credentials. Use only the tables listed here and follow the access rules per table.
 
 ## Tables and usage
 
@@ -47,13 +47,15 @@ This database stores the agent's core prompts, state, memories, tasks, credentia
 
 ### task_status (read/write, no delete)
 - Purpose: Track task progress and current state for entries in `tasks`.
-- Use: Insert on task creation; update status and progress as work proceeds. Never delete or change `task_id`.
+- Use: Insert on task creation; update status, progress, and `postponed_until` as work proceeds. Never delete or change `task_id`.
 - Schema:
   - task_id uuid (primary key, references tasks.id)
   - status task_status_enum
   - progress jsonb
+  - postponed_until timestamptz (nullable)
   - updated_at timestamptz
 - status enum values: pending, in_progress, blocked, done, cancelled
+- postponed_until: If set, the task will be filtered out from selection until the specified time is reached. This allows creating delayed tasks/messages that won't be processed until later.
 
 ### system_credentials (read-only)
 - Purpose: Owner-provided credentials (API keys, tokens) the agent may need.
