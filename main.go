@@ -200,6 +200,7 @@ func main() {
 
 	tools := buildTools()
 	lastHourlyLoop := time.Now()
+	lastPresenceUpdate := time.Now()
 
 MainLoop:
 	for {
@@ -230,6 +231,16 @@ MainLoop:
 		if err := syncRepo.UpdateNextBatch(ctx, syncResp.NextBatch); err != nil {
 			fmt.Fprintln(os.Stderr, "failed to update sync token:", err)
 			continue
+		}
+
+		// Update Matrix presence every 2 minutes to stay online
+		if time.Since(lastPresenceUpdate) >= 2*time.Minute {
+			if err := matrixClient.SetPresence(ctx, agentMatrixId, "online", "Ready to help!"); err != nil {
+				fmt.Fprintln(os.Stderr, "failed to update presence:", err)
+			} else {
+				fmt.Println("Updated Matrix presence to online")
+			}
+			lastPresenceUpdate = time.Now()
 		}
 
 		isHourlyLoop := time.Since(lastHourlyLoop) >= 1*time.Hour
