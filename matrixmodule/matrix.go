@@ -338,6 +338,25 @@ func (c *Client) Whoami(ctx context.Context) (*WhoamiResponse, error) {
 	return &result, nil
 }
 
+// SetPresence updates the user's presence status on Matrix
+func (c *Client) SetPresence(ctx context.Context, userID, presence, statusMsg string) error {
+	endpoint := c.buildURL("/_matrix/client/v3/presence/"+url.PathEscape(userID)+"/status", nil)
+	
+	body, err := json.Marshal(map[string]any{
+		"presence":   presence,
+		"status_msg": statusMsg,
+	})
+	if err != nil {
+		return err
+	}
+	
+	var result map[string]any
+	if err := c.doPut(ctx, endpoint, body, &result); err != nil {
+		return err
+	}
+	return nil
+}
+
 // JoinRoom joins a Matrix room by ID
 func (c *Client) JoinRoom(ctx context.Context, roomID string) error {
 	endpoint := c.buildURL("/_matrix/client/v3/rooms/"+url.PathEscape(roomID)+"/join", nil)
